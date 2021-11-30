@@ -37,6 +37,7 @@ int sending_file(int fd, const char* filePath, const char* username){
 
     // Allocate a buffer to hold the file contents. We know the size in bytes, so
     // there's no need to multiply to get the size we pass to malloc in this case.
+    
     uint8_t* data = malloc(size);
 
     // Read the file contents
@@ -45,7 +46,7 @@ int sending_file(int fd, const char* filePath, const char* username){
         exit(2);
     }
 
-
+    
     //send the username length
     size_t usernameLen  = strlen(username);
     if(write(fd, &usernameLen, sizeof(size_t)) != sizeof(size_t)){
@@ -64,6 +65,7 @@ int sending_file(int fd, const char* filePath, const char* username){
         // If there was no error, write returned the number of bytes written
         bytes_writtenU += uc;
     }
+    
 
     // Now send the size of the file and then the file bytes by bytes
     // First, send the byte in a size_t
@@ -72,15 +74,80 @@ int sending_file(int fd, const char* filePath, const char* username){
         // Writing failed, so return an error
         return -1;
     }
-    int i =0;
-    while(i< size){
-        char c = data[i];
-        
-        //send file containts as arrays /strings so starting from data to data+size
+   
+    
+    // }
 
+    printf("got here5\n");
 
+    size_t bytes_written = 0;
+    while (bytes_written < size) {
+        // Try to write the entire file
+        ssize_t rc = write(fd, data + bytes_written, size - bytes_written);
+
+        // Did the write fail? If so, return an error
+        if (rc <= 0) return -1;
+
+        // If there was no error, write returned the number of bytes written
+        bytes_written += rc;
+    }
+  
+
+    return 0;
+
+}
+
+char* receive_file(int fd) {
+  // First try to read in the username length
+  char** username_and_file = malloc(sizeof(char*) * 2);
+
+  // The first iteration of the for loop reads in the username, and the second reads in the file array They are stored to 
+  //  username_and_file[0] and username_and_file[1], respectively.
+  for(int i = 0; i < 2; i++){
+    size_t len;
+    if (read(fd, &len, sizeof(size_t)) != sizeof(size_t)) {
+      // Reading failed. Return an error
+      return NULL;
     }
 
+    // Now make sure the string length is reasonable
+    if (len > MAX_FILE_PATH_LENGTH) {
+      errno = EINVAL;
+      return NULL;
+    }
+
+    // Allocate space for the character array of string
+    char* result = malloc(len + 1);
+
+    // Try to read the string. Loop until the entire string has been read.
+    size_t bytes_read = 0;
+    while (bytes_read < len) {
+      // Try to read the entire remaining string
+      ssize_t rc = read(fd, result + bytes_read, len - bytes_read);
+
+      // Did the read fail? If so, return an error
+      if (rc <= 0) {
+        free(result);
+        return NULL;
+      }
+
+      // Update the number of bytes read
+      bytes_read += rc;
+    }
+
+    result[len] = '\0';
+    username_and_file[i] = result;
+  }
+
+  FILE *fp;
+  fp  = fopen ("data.txt", "w");
+
+  fputs(username_and_file[1], fp);
+  fclose(fp);
+  //update the array to hold the name of the file instead of the string of the whole file
+  
 
 
+
+  return username_and_file[0];
 }

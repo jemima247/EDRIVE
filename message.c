@@ -7,10 +7,12 @@
 #include <string.h>
 #include <unistd.h>
 
+
+
 // Send a across a socket with a header that includes the message length.
-int send_file(int fd, const char* filePath, const char* username) {
+int send_message(int fd, const char* message, const char* username) {
   // If the message is NULL, set errno to EINVAL and return an error
-  if (filePath == NULL) {
+  if (message == NULL) {
     errno = EINVAL;
     return -1;
   }
@@ -36,7 +38,7 @@ int send_file(int fd, const char* filePath, const char* username) {
 
   // Now send the size of the message and then the message
   // First, send the length of the message in a size_t
-  size_t len = strlen(filePath);
+  size_t len = strlen(message);
   if (write(fd, &len, sizeof(size_t)) != sizeof(size_t)) {
     // Writing failed, so return an error
     return -1;
@@ -48,7 +50,7 @@ int send_file(int fd, const char* filePath, const char* username) {
   size_t bytes_written = 0;
   while (bytes_written < len) {
     // Try to write the entire remaining message
-    ssize_t rc = write(fd, filePath + bytes_written, len - bytes_written);
+    ssize_t rc = write(fd, message + bytes_written, len - bytes_written);
 
     // Did the write fail? If so, return an error
     if (rc <= 0) return -1;
@@ -61,9 +63,9 @@ int send_file(int fd, const char* filePath, const char* username) {
 }
 
 // Receive a message from a socket and return a 2-element array with the username and message strings (which must be freed later)
-char** receive_file(int fd) {
+char** receive_message(int fd) {
   // First try to read in the username length
-  char** usernameFilepath = malloc(sizeof(char*) * 2);
+  char** usernamemessage = malloc(sizeof(char*) * 2);
 
   // The first iteration of the for loop reads in the username, and the second reads in the message. They are stored to 
   //  usernameMessage[0] and usernameMessage[1], respectively.
@@ -100,7 +102,7 @@ char** receive_file(int fd) {
     }
 
     result[len] = '\0';
-    usernameFilepath[i] = result;
+    usernamemessage[i] = result;
   }
-  return usernameFilepath;
+  return usernamemessage;
 }

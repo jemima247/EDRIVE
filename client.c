@@ -7,6 +7,7 @@
 
 #include "socket.h"
 #include "message.h"
+#include "file.h"
 
 #include <assert.h>
 #include <signal.h>
@@ -27,22 +28,47 @@ void* send_message_thread(void* args){
       perror("fgets\n");
       exit(EXIT_FAILURE);
     }
+    char* new_message = strtok(message, "\n"); //removing trailing new line char
+
     //split command
-    if(strcmp(message, "send") == 0){
-      const char* filePath = (char*)malloc(sizeof(char*));
-      printf("%s\n", filePath);
+    if(strcmp(new_message, "send") == 0){
+      int rc = send_message(*server_socket, new_message, username);
+      if (rc == -1){
+        perror("Failed to send message to server");
+        exit(EXIT_FAILURE);
+      }
+
+      char* filePath = (char*)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
+
+      
+
       if (fgets(filePath, MAX_FILE_PATH_LENGTH, stdin) == NULL){
         perror("fgets for filepath\n");
         exit(EXIT_FAILURE);
       }
-
       
+      char* new_filePath = strtok(filePath, "\n"); //removing trailing new line char
+      
+
+
+      rc = sending_file(*server_socket, new_filePath, username);
+      if (rc == -1){
+        perror("Failed to send message to server");
+        exit(EXIT_FAILURE);
+      }
+
+      free(filePath);
+      
+
     }
-    int rc = send_file(*server_socket, message, username);
-    if (rc == -1){
-      perror("Failed to send message to server");
-      exit(EXIT_FAILURE);
+    else{
+      int rc = send_message(*server_socket, new_message, username);
+      if (rc == -1){
+        perror("Failed to send message to server");
+        exit(EXIT_FAILURE);
+      }
     }
+    
     free(message);
   }
 
@@ -54,12 +80,20 @@ void* receive_message_thread(void* args){
   int* server_socket = (int*)args;
   while(1){
     // Read a message from the server
-    char** messageA = receive_file(*server_socket);
-
-    
+    char** messageA = receive_message(*server_socket);
+ 
     char* usernameServer = messageA[0];
     char* message = messageA[1];
-    printf("%s sent %s", usernameServer, message );
+    printf("%s : %s", usernameServer, message );
+    if(strcmp(message, "send") == 0){
+      char* FileUsername = receive_file(*server_socket);
+      
+      
+      printf("%s", FileUsername);
+
+
+      free(FileUsername);
+    }
     // ui_display(usernameClient, message);
     // free malloc'ed memory
     free(usernameServer);

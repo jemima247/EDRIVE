@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #include "socket.h"
-
+#include "file.h"
 #include "message.h"
 
 #include <assert.h>
@@ -38,7 +38,7 @@ node_t* sockets = NULL;
 
 
 typedef struct fnode{
-    char* filePath;
+    char* message;
     struct fnode* nextf;
 } fnode_t;
 
@@ -86,7 +86,7 @@ void* receive_file_path_thread(void* args){
   while(1){
     // printf("waiting for message\n");
     // Read a message from the server
-    char** messageA = receive_file(*client_socket);
+    char** messageA = receive_message(*client_socket);
     if (messageA == NULL || messageA[0] == NULL  ||messageA[1] == NULL ) {
       //Failed to read message from server, so remove it from the linked list
       if(pthread_mutex_lock(&lock)){
@@ -104,13 +104,25 @@ void* receive_file_path_thread(void* args){
     }
     // Otherwise there is a message in messageA, so display it    
     char* usernameClient = messageA[0]; 
-    char* filePath = messageA[1];
+    char* message = messageA[1];
     // ui_display(usernameClient, message);
 
     fnode_t* new_file = (fnode_t*) malloc(sizeof(fnode_t));
-    new_file->filePath = filePath;
+    size_t len = strlen(message);
+    new_file->message = message;
+
+    printf("%s : '%s'\n", usernameClient, message);
+    if(strcmp(message, "send") == 0){
+
+      char* FileUsername = receive_file(*client_socket);
+   
+      // char* file = FileU[1];
+      printf("%s has sent file\n", FileUsername);
+      
+
+      free(FileUsername);
+    }
     
-    // printf("server received '%s' from '%s' \n", new_file->filePath, usernameClient);
 
     // acquire the lock before iterating through the linked list
     if(pthread_mutex_lock(&lock)){
@@ -118,7 +130,8 @@ void* receive_file_path_thread(void* args){
       exit(EXIT_FAILURE);
     }
 
-
+    //now work on how to send from server to other clients upon request
+    
     new_file->nextf = Files;
     Files = new_file;
     
@@ -128,7 +141,7 @@ void* receive_file_path_thread(void* args){
       if( temp->socket != *client_socket){
       // Send a message to the server
       //send notification instead of file path
-        int rc = send_file(temp->socket, filePath, usernameClient);
+        int rc = send_message(temp->socket, message, usernameClient);
         // if (rc == -1) {
         //   //Failed to send message to server, so remove the node from the linked list
         //   node_t* temp2 = temp->next;
@@ -149,7 +162,7 @@ void* receive_file_path_thread(void* args){
 
     // free malloc'ed memory
     free(usernameClient);
-    free(filePath);
+    free(message);
     free(messageA);
   }
 
