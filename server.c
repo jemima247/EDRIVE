@@ -164,27 +164,35 @@ void* receive_file_path_thread(void* args){
       }
       // Otherwise there is a message in messageA, so display it    
       usernameClient = messageFile[0]; 
-      char* fileName = messageFile[1];
+      const char* fileName = messageFile[1];
 
       //loop through list of files to confirm that file exist then send it
       if(pthread_mutex_lock(&lock)){
         perror("Look to loop list");
         exit(EXIT_FAILURE);
       }
-      fnode_t* temp = Files
+      fnode_t* temp = Files;
 
       while (temp != NULL){
         if (temp->fileName == fileName){
           //use function to send to client
-          
+          char* filePath = strcat("./", fileName);
+          int rc = sending_file(*client_socket, filePath, "Server File");
+
+          if (rc == -1) {
+            //not sure what to do yet
+            perror("failed to send error file message");
+            exit(EXIT_FAILURE);
+          }
+
           break;
         }
         else{
-          temp = temp->next;
+          temp = temp->nextf;
         }
       }
       if(temp == NULL){
-        int rc = send_message(client_socket, "file was not found in server", "server");
+        int rc = send_message(*client_socket, "file was not found in server", "server");
         if (rc == -1) {
           //not sure what to do yet
           perror("failed to send error file message");

@@ -61,6 +61,12 @@ void* send_message_thread(void* args){
       
 
     }
+    else if (strcmp(new_message, "receive") == 0){
+      char** FileUsername = receive_file(*server_socket);
+      // work on this part next to ensure that the file is there an dthat if it gets edited or not
+      //is sent back and how
+      
+    }
     else{
       int rc = send_message(*server_socket, new_message, username);
       if (rc == -1){
