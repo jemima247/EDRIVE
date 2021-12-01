@@ -108,7 +108,7 @@ void* receive_file_path_thread(void* args){
     // ui_display(usernameClient, message);
 
     
-    size_t len = strlen(message);
+    
     
 
     printf("%s : '%s'\n", usernameClient, message);
@@ -121,22 +121,22 @@ void* receive_file_path_thread(void* args){
       fnode_t* new_file = (fnode_t*) malloc(sizeof(fnode_t));
       new_file->fileName = fileName;
 
-      // acquire the lock before iterating through the linked list
-    if(pthread_mutex_lock(&lock)){
-      perror("Lock to loop through list failed");
-      exit(EXIT_FAILURE);
-    }
+        // acquire the lock before iterating through the linked list
+      if(pthread_mutex_lock(&lock)){
+        perror("Lock to loop through list failed");
+        exit(EXIT_FAILURE);
+      }
 
-    //save new file in list of files in server
-    
-    new_file->nextf = Files;
-    Files = new_file;
+      //save new file in list of files in server
+      
+      new_file->nextf = Files;
+      Files = new_file;
 
-    // release the lock
-    if(pthread_mutex_unlock(&lock)){
-      perror("Unlock for linked list failed");
-      exit(EXIT_FAILURE);
-    }
+      // release the lock
+      if(pthread_mutex_unlock(&lock)){
+        perror("Unlock for linked list failed");
+        exit(EXIT_FAILURE);
+      }
    
       // char* file = FileU[1];
       printf("%s has sent file %s\n", usernameClient, fileName);
@@ -145,6 +145,54 @@ void* receive_file_path_thread(void* args){
       free(FileUsername);
       free(fileName);
     }
+    else if(strcmp(message, "receive") == 0){
+      char** messageFile = receive_message(*client_socket);
+      if (messageFile == NULL || messageFile[0] == NULL  ||messageFile[1] == NULL ) {
+        //Failed to read message from server, so remove it from the linked list
+        if(pthread_mutex_lock(&lock)){
+          perror("Lock to loop through list failed");
+          exit(EXIT_FAILURE);
+        }
+
+        remove_node(*client_socket);
+
+        if(pthread_mutex_unlock(&lock)){
+          perror("Unlock to loop through list failed");
+          exit(EXIT_FAILURE);
+        }
+        return NULL;     
+      }
+      // Otherwise there is a message in messageA, so display it    
+      usernameClient = messageFile[0]; 
+      char* fileName = messageFile[1];
+
+      //loop through list of files to confirm that file exist then send it
+      if(pthread_mutex_lock(&lock)){
+        perror("Look to loop list");
+        exit(EXIT_FAILURE);
+      }
+      fnode_t* temp = Files
+
+      while (temp != NULL){
+        if (temp->fileName == fileName){
+          //use function to send to client
+          
+          break;
+        }
+        else{
+          temp = temp->next;
+        }
+      }
+      if(temp == NULL){
+        int rc = send_message(client_socket, "file was not found in server", "server");
+        if (rc == -1) {
+          //not sure what to do yet
+          perror("failed to send error file message");
+          exit(EXIT_FAILURE);
+        }
+      }
+    }
+
     
 
     
