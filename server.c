@@ -38,7 +38,7 @@ node_t* sockets = NULL;
 
 
 typedef struct fnode{
-    char* message;
+    char* fileName;
     struct fnode* nextf;
 } fnode_t;
 
@@ -107,58 +107,68 @@ void* receive_file_path_thread(void* args){
     char* message = messageA[1];
     // ui_display(usernameClient, message);
 
-    fnode_t* new_file = (fnode_t*) malloc(sizeof(fnode_t));
+    
     size_t len = strlen(message);
-    new_file->message = message;
+    
 
     printf("%s : '%s'\n", usernameClient, message);
     if(strcmp(message, "send") == 0){
 
-      char* FileUsername = receive_file(*client_socket);
-   
-      // char* file = FileU[1];
-      printf("%s has sent file\n", FileUsername);
-      
+      char** FileUsername = receive_file(*client_socket);
+      printf("%s\n", FileUsername[1]);
+      usernameClient= FileUsername[1];
+      char* fileName = FileUsername[0];
+      fnode_t* new_file = (fnode_t*) malloc(sizeof(fnode_t));
+      new_file->fileName = fileName;
 
-      free(FileUsername);
-    }
-    
-
-    // acquire the lock before iterating through the linked list
+      // acquire the lock before iterating through the linked list
     if(pthread_mutex_lock(&lock)){
       perror("Lock to loop through list failed");
       exit(EXIT_FAILURE);
     }
 
-    //now work on how to send from server to other clients upon request
+    //save new file in list of files in server
     
     new_file->nextf = Files;
     Files = new_file;
-    
-    // iterate through the linked list, sending the message to every connection except for the one that sent it to this machine
-    node_t* temp = sockets;
-    while (temp != NULL){
-      if( temp->socket != *client_socket){
-      // Send a message to the server
-      //send notification instead of file path
-        int rc = send_message(temp->socket, message, usernameClient);
-        // if (rc == -1) {
-        //   //Failed to send message to server, so remove the node from the linked list
-        //   node_t* temp2 = temp->next;
-        //   // this call to remove_node is okay since we still have the lock
-        //   remove_node(temp->socket);
-        //   temp = temp2;
-        //   continue;
-        // } 
-      }
-      temp = temp->next;
-    }
 
     // release the lock
     if(pthread_mutex_unlock(&lock)){
       perror("Unlock for linked list failed");
       exit(EXIT_FAILURE);
     }
+   
+      // char* file = FileU[1];
+      printf("%s has sent file %s\n", usernameClient, fileName);
+      
+
+      free(FileUsername);
+      free(fileName);
+    }
+    
+
+    
+    
+    // // iterate through the linked list, sending the message to every connection except for the one that sent it to this machine
+    // node_t* temp = sockets;
+    // while (temp != NULL){
+    //   if( temp->socket != *client_socket){
+    //   // Send a message to the server
+    //   //send notification instead of file path
+    //     int rc = send_message(temp->socket, message, usernameClient);
+    //     // if (rc == -1) {
+    //     //   //Failed to send message to server, so remove the node from the linked list
+    //     //   node_t* temp2 = temp->next;
+    //     //   // this call to remove_node is okay since we still have the lock
+    //     //   remove_node(temp->socket);
+    //     //   temp = temp2;
+    //     //   continue;
+    //     // } 
+    //   }
+    //   temp = temp->next;
+    // }
+
+    
 
     // free malloc'ed memory
     free(usernameClient);

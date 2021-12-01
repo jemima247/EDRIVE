@@ -46,6 +46,40 @@ int sending_file(int fd, const char* filePath, const char* username){
         exit(2);
     }
 
+    char * filePathC =  (char*)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
+    strncpy(filePathC, filePath, MAX_FILE_PATH_LENGTH);
+    char * fileName = strtok(filePathC, "/");
+    
+
+
+   // loop through the string to extract all other tokens
+   char* temp = fileName;
+   while( temp != NULL ) {
+     fileName = temp;
+      temp = strtok(NULL, "/");
+   }
+   printf("%s here\n", fileName);
+
+   size_t fileNameLen = strlen(fileName);
+   if(write(fd, &fileNameLen, sizeof(size_t)) != sizeof(size_t)){
+     return -1;
+   }
+
+   //send file name now
+   size_t bytes_writtenFN = 0;
+   while(bytes_writtenFN < fileNameLen){
+     //Try to write the filename
+     ssize_t uc = write(fd, fileName + bytes_writtenFN, fileNameLen - bytes_writtenFN);
+
+     // Did the write fail? If so, return an error
+        if (uc <= 0) return -1;
+
+        // If there was no error, write returned the number of bytes written
+        bytes_writtenFN += uc;
+
+   }
+
+
     
     //send the username length
     size_t usernameLen  = strlen(username);
@@ -97,13 +131,13 @@ int sending_file(int fd, const char* filePath, const char* username){
 
 }
 
-char* receive_file(int fd) {
+char** receive_file(int fd) {
   // First try to read in the username length
-  char** username_and_file = malloc(sizeof(char*) * 2);
+  char** username_and_file = malloc(sizeof(char*) * 3);
 
   // The first iteration of the for loop reads in the username, and the second reads in the file array They are stored to 
   //  username_and_file[0] and username_and_file[1], respectively.
-  for(int i = 0; i < 2; i++){
+  for(int i = 0; i < 3; i++){
     size_t len;
     if (read(fd, &len, sizeof(size_t)) != sizeof(size_t)) {
       // Reading failed. Return an error
@@ -140,14 +174,14 @@ char* receive_file(int fd) {
   }
 
   FILE *fp;
-  fp  = fopen ("data.txt", "w");
+  fp  = fopen (username_and_file[0], "w");
 
-  fputs(username_and_file[1], fp);
+  fputs(username_and_file[2], fp);
   fclose(fp);
   //update the array to hold the name of the file instead of the string of the whole file
   
 
 
 
-  return username_and_file[0];
+  return username_and_file;
 }

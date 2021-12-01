@@ -7,4 +7,4 @@ int sending_file(int fd, const char* filePath, const char* username);
 
 // Receive a message from a socket and return the message string (which must be freed later).
 // Returns NULL when an error occurs.
-char* receive_file(int fd);
+char** receive_file(int fd);

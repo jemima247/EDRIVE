@@ -86,10 +86,10 @@ void* receive_message_thread(void* args){
     char* message = messageA[1];
     printf("%s : %s", usernameServer, message );
     if(strcmp(message, "send") == 0){
-      char* FileUsername = receive_file(*server_socket);
+      char** FileUsername = receive_file(*server_socket);
       
       
-      printf("%s", FileUsername);
+      printf("%s", FileUsername[1]);
 
 
       free(FileUsername);
