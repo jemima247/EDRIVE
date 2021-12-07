@@ -37,6 +37,7 @@ time_t seconds;
 // Keep the username for this machine in a global so we can access it from the callback
 const char* username;
 void* update_file_thread(void* args){
+  printf("update_file_thread\n");
   while(true){
     thread_arg_t* arg = (thread_arg_t*)args;
     char* fileName = arg->fileName;
@@ -164,11 +165,15 @@ void* send_message_thread(void* args){
       printf("File %s has been received from %s\n", FileUsername[0], FileUsername[1]);
 
       pthread_t threads3;
+
+      printf("Creating thread to update file\n");
       
       thread_arg_t* args = (thread_arg_t*)malloc(sizeof(thread_arg_t));
       args->fileName = new_file->fileName;
       args->lastModified = new_file->lastModified;
       args->server_socket = server_socket;
+
+      printf("Created thread to update file moving on\n");
 
       if(pthread_create(&threads3, NULL, update_file_thread, &args)){
           perror("failed to create thread for client");
