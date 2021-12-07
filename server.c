@@ -33,6 +33,7 @@ typedef struct node{
   struct node* next;
 } node_t;
 
+const char* username = "Server";
 // struct to be passed in (by reference) to the receive_message_thread function for threads
 typedef struct server_thread_arg{
   int server_socket_fd;
@@ -167,8 +168,10 @@ void* receive_file_path_thread(void* args){
       // free(fileName);
     }
     else if(strcmp(message, "receive") == 0){
+      printf("we got the command\n");
       char** messageFile = receive_message(*client_socket);
       if (messageFile == NULL || messageFile[0] == NULL  ||messageFile[1] == NULL ) {
+        printf("weird\n");
         //Failed to read message from server, so remove it from the linked list
         if(pthread_mutex_lock(&lock)){
           perror("Lock to loop through list failed");
@@ -205,27 +208,28 @@ void* receive_file_path_thread(void* args){
         if (strcmp(temp->fileName,fileName)==0){
           printf("WTF!!!\n");
           //use function to send to client
-          char beginingFilePath[3];
-          strcpy(beginingFilePath, "./");
+          char beginingFilePath[3] = "./";
+          // strcpy(beginingFilePath, "./");
 
           //get length of the requessted fileName
-          size_t fileNameLength = strlen(fileName);
+          
           printf("213\n");
           //now create the space for the filePath
-          char* filePath = (char*) malloc((fileNameLength+3)*sizeof(char));
+          char* filePath = (char*) malloc(sizeof(char)* MAX_FILE_PATH_LENGTH);
           strcpy(filePath, beginingFilePath);
           printf("217\n");
           strcat(filePath, fileName);
           printf("TF\n");
           printf("%s\n", filePath);
-          int rc = sending_file(*client_socket, filePath, "Server File");
-          printf("%s has benn sent to %s\n", fileName, usernameClient);
+          int rc = sending_file(*client_socket, filePath, username);
+          
 
           if (rc == -1) {
             //not sure what to do yet
             perror("failed to send error file message");
             exit(EXIT_FAILURE);
           }
+          printf("%s has benn sent to %s\n", fileName, usernameClient);
           free(filePath);
 
           break;
