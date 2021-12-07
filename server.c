@@ -20,6 +20,11 @@
 
 // Keep the username for this machine in a global so we can access it from the callback
 
+//Notice that everytime we change the machine or relogin, the Files are going to be empty
+//SO we need a function such that every time the server is started up we have that the Files 
+// variable is updated with the namees of Files otherwise it will always be null
+
+//We also have to figure out how to send larger files in time
 
 // Nodes for a linked list of connections
 typedef struct node{
@@ -112,7 +117,7 @@ void* receive_file_path_thread(void* args){
     
     printf("%s : '%s'\n", usernameClient, message);
     if(strcmp(message, "send") == 0){
-
+      printf("Preparing to receive file\n");
       char** FileUsername = receive_file(*client_socket);
       if (FileUsername == NULL || FileUsername[0] == NULL  ||FileUsername[1] == NULL ) {
       //Failed to read message from server, so remove it from the linked list
@@ -158,8 +163,8 @@ void* receive_file_path_thread(void* args){
       printf("%s has sent file %s\n", usernameClient, fileName);
       
 
-      free(FileUsername);
-      free(fileName);
+      // free(FileUsername);
+      // free(fileName);
     }
     else if(strcmp(message, "receive") == 0){
       char** messageFile = receive_message(*client_socket);
@@ -170,7 +175,7 @@ void* receive_file_path_thread(void* args){
           exit(EXIT_FAILURE);
         }
 
-        remove_node(*client_socket);
+        remove_node(*client_socket); //-- Why are we removing the node oooh never mind
 
         if(pthread_mutex_unlock(&lock)){
           perror("Unlock to loop through list failed");
@@ -179,20 +184,40 @@ void* receive_file_path_thread(void* args){
         return NULL;     
       }
       // Otherwise there is a message in messageA, so display it    
-      usernameClient = messageFile[0]; 
+      usernameClient = messageFile[0];  
       const char* fileName = messageFile[1];
+
 
       //loop through list of files to confirm that file exist then send it
       if(pthread_mutex_lock(&lock)){
         perror("Look to loop list");
         exit(EXIT_FAILURE);
       }
+      printf("%s\n", usernameClient);
+      
       fnode_t* temp = Files;
-
+      printf("%s\n", fileName);
+      // printf("the temp val, %s\n", temp->fileName);//was giving the segfault to fix tomorrow
       while (temp != NULL){
-        if (temp->fileName == fileName){
+        printf("in\n");
+        printf("tempL: %s\n", temp->fileName);
+        printf("%s filename\n",fileName);
+        if (strcmp(temp->fileName,fileName)==0){
+          printf("WTF!!!\n");
           //use function to send to client
-          char* filePath = strcat("./", fileName);
+          char beginingFilePath[3];
+          strcpy(beginingFilePath, "./");
+
+          //get length of the requessted fileName
+          size_t fileNameLength = strlen(fileName);
+          printf("213\n");
+          //now create the space for the filePath
+          char* filePath = (char*) malloc((fileNameLength+3)*sizeof(char));
+          strcpy(filePath, beginingFilePath);
+          printf("217\n");
+          strcat(filePath, fileName);
+          printf("TF\n");
+          printf("%s\n", filePath);
           int rc = sending_file(*client_socket, filePath, "Server File");
           printf("%s has benn sent to %s\n", fileName, usernameClient);
 

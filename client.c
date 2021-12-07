@@ -85,31 +85,30 @@ void* send_message_thread(void* args){
         exit(EXIT_FAILURE);
       }
 
+      //create spaceeeee efor the filePath
       char* filePath = (char*)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
 
-      
-
+      printf("Enter filepath please:");
+      //get the filePath 
       if (fgets(filePath, MAX_FILE_PATH_LENGTH, stdin) == NULL){
         perror("fgets for filepath\n");
         exit(EXIT_FAILURE);
       }
       
       char* new_filePath = strtok(filePath, "\n"); //removing trailing new line char
-      
 
-
+      //send the file to the server
       rc = sending_file(*server_socket, new_filePath, username);
       if (rc == -1){
         perror("Failed to send message to server");
         exit(EXIT_FAILURE);
       }
-
-      free(filePath);
-      
-
+      printf("Your file has been successfully sent\n");
+      free(filePath);     
     }
-    else if (strcmp(new_message, "receive") == 0){
-      
+    
+    //request file from the server
+    else if (strcmp(new_message, "receive") == 0){  
       int rc = send_message(*server_socket, new_message, username);
       //send the recieve command to the server
       if (rc == -1){
@@ -117,8 +116,9 @@ void* send_message_thread(void* args){
         exit(EXIT_FAILURE);
       }
 
+      //create space for the filename
       char* filename = (char*)malloc(sizeof(char)*MAX_MESSAGE_LENGTH);
-      printf("file name please\n");
+      printf("Enter file name please:\n");
 
       //get the file name that the client wants to access then send taht to the server
       if (fgets(filename, MAX_MESSAGE_LENGTH, stdin) == NULL){
@@ -126,13 +126,14 @@ void* send_message_thread(void* args){
         exit(EXIT_FAILURE);
       }
       filename = strtok(filename, "\n"); //removing trailing new line char
-
+      
+      //send filename to server
       rc = send_message(*server_socket, filename, username);
       if (rc == -1){
         perror("Failed to send filename to server");
         exit(EXIT_FAILURE);
       }
-      printf("sent file name\n");
+      printf("sent file name to server\n");
       //wait to receive the file
       char** FileUsername = receive_file(*server_socket);
       if (FileUsername == NULL || FileUsername[0] == NULL  ||FileUsername[1] == NULL ) {

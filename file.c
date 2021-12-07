@@ -117,6 +117,7 @@ int sending_file(int fd, const char* filePath, const char* username){
 
     size_t bytes_written = 0;
     while (bytes_written < size) {
+      printf("in bytes\n");
         // Try to write the entire file
         ssize_t rc = write(fd, data + bytes_written, size - bytes_written);
 
@@ -126,7 +127,6 @@ int sending_file(int fd, const char* filePath, const char* username){
         // If there was no error, write returned the number of bytes written
         bytes_written += rc;
     }
-  
 
     return 0;
 
@@ -173,6 +173,7 @@ char** receive_file(int fd) {
     result[len] = '\0';
     username_and_file[i] = result;
   }
+  printf("178\n");
 
   FILE *fp;
   fp  = fopen (username_and_file[0], "w");
@@ -180,7 +181,7 @@ char** receive_file(int fd) {
   fputs(username_and_file[2], fp);
   fclose(fp);
   //update the array to hold the name of the file instead of the string of the whole file
-  
+  printf("FIle created\n");
 
 
 
