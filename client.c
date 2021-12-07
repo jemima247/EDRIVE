@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "socket.h"
 #include "message.h"
@@ -15,15 +16,61 @@
 #define MAX_MESSAGE_LENGTH 2048
 #define MAX_FILE_PATH_LENGTH 260
 
+typedef struct thread_arg {
+  char* fileName;
+  time_t lastModified;
+  int* server_socket;
+} thread_arg_t;
 
+typedef struct fnode{
+    char* fileName;
+    time_t lastModified;
+    struct fnode* nextf;
+} fnode_t;
+
+fnode_t* Files = NULL;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+time_t seconds;
+// Stores time seconds
 
 // Keep the username for this machine in a global so we can access it from the callback
 const char* username;
+void* update_file_thread(void* args){
+  while(true){
+    thread_arg_t* arg = (thread_arg_t*)args;
+    char* fileName = arg->fileName;
+    time_t lastModified = arg->lastModified;
+    int* server_socket = arg->server_socket;
+    
+    char* filePath = strcat("./", fileName);
+
+    if(if_modified(filePath, lastModified)){
+      printf("File %s has been modified\n", fileName);
+      int rc = send_message(*server_socket, "update", username);
+      if (rc == -1){
+        perror("Failed to send message to server");
+        exit(EXIT_FAILURE);
+      }
+      rc = sending_file(*server_socket, filePath, username);
+      if (rc == -1){
+        perror("Failed to send message to server");
+        exit(EXIT_FAILURE);
+      }
+
+      free(filePath);
+      free(fileName);
+      free(arg);
+      
+    }
+  }
+
+}
 
 void* send_message_thread(void* args){
   int* server_socket = (int*)args;
   while(1){
-    char* message = (char*)malloc(sizeof(char*));
+    char* message = (char*)malloc(sizeof(char)*MAX_MESSAGE_LENGTH);
     if (fgets(message, MAX_MESSAGE_LENGTH, stdin) == NULL){
       perror("fgets\n");
       exit(EXIT_FAILURE);
@@ -62,10 +109,80 @@ void* send_message_thread(void* args){
 
     }
     else if (strcmp(new_message, "receive") == 0){
-      char** FileUsername = receive_file(*server_socket);
-      // work on this part next to ensure that the file is there an dthat if it gets edited or not
-      //is sent back and how
       
+      int rc = send_message(*server_socket, new_message, username);
+      //send the recieve command to the server
+      if (rc == -1){
+        perror("Failed to send message to server");
+        exit(EXIT_FAILURE);
+      }
+
+      char* filename = (char*)malloc(sizeof(char)*MAX_MESSAGE_LENGTH);
+      printf("file name please\n");
+
+      //get the file name that the client wants to access then send taht to the server
+      if (fgets(filename, MAX_MESSAGE_LENGTH, stdin) == NULL){
+        perror("fgets for file name\n");
+        exit(EXIT_FAILURE);
+      }
+      filename = strtok(filename, "\n"); //removing trailing new line char
+
+      rc = send_message(*server_socket, filename, username);
+      if (rc == -1){
+        perror("Failed to send filename to server");
+        exit(EXIT_FAILURE);
+      }
+      printf("sent file name\n");
+      //wait to receive the file
+      char** FileUsername = receive_file(*server_socket);
+      if (FileUsername == NULL || FileUsername[0] == NULL  ||FileUsername[1] == NULL ) {
+        //Failed to read message from server, so remove it from the linked list
+        //do something TODO
+        return NULL;     
+      }
+      printf("received file\n");
+      fnode_t* new_file = (fnode_t*)malloc(sizeof(fnode_t));
+      new_file->fileName = FileUsername[0];
+      new_file->lastModified = time(&seconds);
+
+      if(pthread_mutex_lock(&lock)){
+        perror("Lock to loop through list failed");
+        exit(EXIT_FAILURE);
+      }
+
+      //save new file in list of files in server
+      
+      new_file->nextf = Files;
+      Files = new_file;
+
+      // release the lock
+      if(pthread_mutex_unlock(&lock)){
+        perror("Unlock for linked list failed");
+        exit(EXIT_FAILURE);
+      }
+      printf("File %s has been received from %s\n", FileUsername[0], FileUsername[1]);
+
+      pthread_t threads3;
+      
+      thread_arg_t* args = (thread_arg_t*)malloc(sizeof(thread_arg_t));
+      args->fileName = new_file->fileName;
+      args->lastModified = new_file->lastModified;
+      args->server_socket = server_socket;
+
+      if(pthread_create(&threads3, NULL, update_file_thread, &args)){
+          perror("failed to create thread for client");
+          exit(EXIT_FAILURE);
+      }
+      
+    }
+    else if (strcmp(new_message, "quit") == 0){
+      int rc = send_message(*server_socket, new_message, username);
+      if (rc == -1){
+        perror("Failed to send message to server");
+        exit(EXIT_FAILURE);
+      }
+      exit(0);
+      //
     }
     else{
       int rc = send_message(*server_socket, new_message, username);
@@ -87,21 +204,17 @@ void* receive_message_thread(void* args){
   while(1){
     // Read a message from the server
     char** messageA = receive_message(*server_socket);
+
+    if (messageA == NULL || messageA[0] == NULL  ||messageA[1] == NULL ) {
+        //Failed to read message from server, so remove it from the linked list
+        //do something TODO
+        return NULL;     
+      }
  
     char* usernameServer = messageA[0];
     char* message = messageA[1];
     printf("%s : %s", usernameServer, message );
-    if(strcmp(message, "send") == 0){
-      char** FileUsername = receive_file(*server_socket);
-      
-      
-      printf("%s", FileUsername[1]);
-
-
-      free(FileUsername);
-    }
-    // ui_display(usernameClient, message);
-    // free malloc'ed memory
+    
     free(usernameServer);
     free(message);
     free(messageA);

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
+
 #include "socket.h"
 #include "file.h"
 #include "message.h"
@@ -13,6 +14,8 @@
 #include <signal.h>
 
 #define MAX_MESSAGE_LENGTH 2048
+#define EDITED 1
+#define NOT_EDITED 0
 
 
 // Keep the username for this machine in a global so we can access it from the callback
@@ -39,6 +42,7 @@ node_t* sockets = NULL;
 
 typedef struct fnode{
     char* fileName;
+    int state;
     struct fnode* nextf;
 } fnode_t;
 
@@ -105,21 +109,33 @@ void* receive_file_path_thread(void* args){
     // Otherwise there is a message in messageA, so display it    
     char* usernameClient = messageA[0]; 
     char* message = messageA[1];
-    // ui_display(usernameClient, message);
-
     
-    
-    
-
     printf("%s : '%s'\n", usernameClient, message);
     if(strcmp(message, "send") == 0){
 
       char** FileUsername = receive_file(*client_socket);
-      printf("%s\n", FileUsername[1]);
+      if (FileUsername == NULL || FileUsername[0] == NULL  ||FileUsername[1] == NULL ) {
+      //Failed to read message from server, so remove it from the linked list
+        if(pthread_mutex_lock(&lock)){
+          perror("Lock to loop through list failed");
+          exit(EXIT_FAILURE);
+        }
+
+        remove_node(*client_socket);
+
+        if(pthread_mutex_unlock(&lock)){
+          perror("Unlock to loop through list failed");
+          exit(EXIT_FAILURE);
+        }
+        return NULL;     
+      }
+
+      printf("received %s from %s\n", FileUsername[0], FileUsername[1]);
       usernameClient= FileUsername[1];
       char* fileName = FileUsername[0];
       fnode_t* new_file = (fnode_t*) malloc(sizeof(fnode_t));
       new_file->fileName = fileName;
+      new_file->state = NOT_EDITED;
 
         // acquire the lock before iterating through the linked list
       if(pthread_mutex_lock(&lock)){
@@ -178,12 +194,14 @@ void* receive_file_path_thread(void* args){
           //use function to send to client
           char* filePath = strcat("./", fileName);
           int rc = sending_file(*client_socket, filePath, "Server File");
+          printf("%s has benn sent to %s\n", fileName, usernameClient);
 
           if (rc == -1) {
             //not sure what to do yet
             perror("failed to send error file message");
             exit(EXIT_FAILURE);
           }
+          free(filePath);
 
           break;
         }
@@ -191,6 +209,7 @@ void* receive_file_path_thread(void* args){
           temp = temp->nextf;
         }
       }
+
       if(temp == NULL){
         int rc = send_message(*client_socket, "file was not found in server", "server");
         if (rc == -1) {
@@ -199,34 +218,75 @@ void* receive_file_path_thread(void* args){
           exit(EXIT_FAILURE);
         }
       }
+      free(messageFile);
+      
+      
+
+
+    }
+    else if(strcmp(message, "update") == 0){
+      char** FileUsername = receive_file(*client_socket);
+      if (FileUsername == NULL || FileUsername[0] == NULL  ||FileUsername[1] == NULL ) {
+        //Failed to read message from server, so remove it from the linked list
+        if(pthread_mutex_lock(&lock)){
+          perror("Lock to loop through list failed");
+          exit(EXIT_FAILURE);
+        }
+
+        remove_node(*client_socket);
+
+        if(pthread_mutex_unlock(&lock)){
+          perror("Unlock to loop through list failed");
+          exit(EXIT_FAILURE);
+        }
+        return NULL;     
+      }
+
+
+
+      printf("update %s from %s\n", FileUsername[0], FileUsername[1]);
+      usernameClient= FileUsername[1];
+      char* fileName = FileUsername[0];
+
+      fnode_t* temp = Files;
+
+      while (temp != NULL){
+        if (temp->fileName == fileName){
+          //use function to send to client
+          temp->state = EDITED;
+          int rc = send_message(*client_socket, "file has been updated", "server");
+          if (rc == -1) {
+            //not sure what to do yet
+            perror("failed to send error file message");
+            exit(EXIT_FAILURE);
+          }
+          
+          break;
+        }
+        else{
+          temp = temp->nextf;
+        }
+      }
+
+      if(temp == NULL){
+        int rc = send_message(*client_socket, "file was not found in server, hence a new file was made", "server");
+        if (rc == -1) {
+          //not sure what to do yet
+          perror("failed to send error file message");
+          exit(EXIT_FAILURE);
+        }
+      }
+      
+      
+
+      free(FileUsername);
+      free(fileName);
+    }
+    else{
+      printf("%s : '%s'\n", usernameClient, message);
+      printf("not a valid command\n");
     }
 
-    
-
-    
-    
-    // // iterate through the linked list, sending the message to every connection except for the one that sent it to this machine
-    // node_t* temp = sockets;
-    // while (temp != NULL){
-    //   if( temp->socket != *client_socket){
-    //   // Send a message to the server
-    //   //send notification instead of file path
-    //     int rc = send_message(temp->socket, message, usernameClient);
-    //     // if (rc == -1) {
-    //     //   //Failed to send message to server, so remove the node from the linked list
-    //     //   node_t* temp2 = temp->next;
-    //     //   // this call to remove_node is okay since we still have the lock
-    //     //   remove_node(temp->socket);
-    //     //   temp = temp2;
-    //     //   continue;
-    //     // } 
-    //   }
-    //   temp = temp->next;
-    // }
-
-    
-
-    // free malloc'ed memory
     free(usernameClient);
     free(message);
     free(messageA);

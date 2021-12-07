@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <time.h>
+#include <sys/stat.h>
 
 
 
@@ -185,3 +186,21 @@ char** receive_file(int fd) {
 
   return username_and_file;
 }
+
+//constructe the if modified function that takes the path of the file in the client since its onle
+//if the client modifies the file it should send it back to the server
+int if_modified(char* filePath, time_t last_modified_in_client){
+  struct stat sb;
+  stat(filePath, &sb);
+  time_t last_modified = sb.st_mtime;
+  if(last_modified_in_client == last_modified){
+    return 0;
+  }
+  else{
+    return 1;
+  }
+}
+
+
+//also I think for the server to update the file it does the samem receive file method it just has to find to already saved files and give 
+//it the state of edited.

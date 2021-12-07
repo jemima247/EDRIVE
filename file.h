@@ -1,3 +1,5 @@
+#include <time.h>
+
 #pragma once
 #define MAX_FILE_PATH_LENGTH 260
 
@@ -8,3 +10,7 @@ int sending_file(int fd, const char* filePath, const char* username);
 // Receive a message from a socket and return the message string (which must be freed later).
 // Returns NULL when an error occurs.
 char** receive_file(int fd);
+
+
+
+int if_modified(char* filePath, time_t last_modified_in_client);
