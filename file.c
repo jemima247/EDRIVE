@@ -140,19 +140,24 @@ char** receive_file(int fd) {
   //  username_and_file[0] and username_and_file[1], respectively.
   for(int i = 0; i < 3; i++){
     size_t len;
+    printf("%d\n", i);
     if (read(fd, &len, sizeof(size_t)) != sizeof(size_t)) {
       // Reading failed. Return an error
       return NULL;
     }
+    printf("read length here %lu\n", len);
 
     // Now make sure the string length is reasonable
     if (len > MAX_FILE_PATH_LENGTH) {
       errno = EINVAL;
+      
       return NULL;
     }
 
     // Allocate space for the character array of string
     char* result = malloc(len + 1);
+
+    printf("create char array here\n");
 
     // Try to read the string. Loop until the entire string has been read.
     size_t bytes_read = 0;

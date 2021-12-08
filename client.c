@@ -139,6 +139,9 @@ void* send_message_thread(void* args){
       char** FileUsername = receive_file(*server_socket);
       if (FileUsername == NULL || FileUsername[0] == NULL  ||FileUsername[1] == NULL ) {
         printf("Failed to receive file\n");
+        printf("%s\n", FileUsername? "true" : "false");
+        printf("%s filename\n", FileUsername[0]);
+        printf("%s user\n", FileUsername[1]);
         //Failed to read message from server, so remove it from the linked list
         //do something TODO
         return NULL;     
