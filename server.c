@@ -208,11 +208,11 @@ void* receive_file_path_thread(void* args){
         if (strcmp(temp->fileName,fileName)==0){
           printf("WTF!!!\n");
           //use function to send to client
-          char beginingFilePath[3] = "./";
+          char beginingFilePath[] = "/home/tazvitya/csc213/Project/";
           // strcpy(beginingFilePath, "./");
 
           //get length of the requessted fileName
-          
+          sleep(3);
           printf("213\n");
           //now create the space for the filePath
           char* filePath = (char*) malloc(sizeof(char)* MAX_FILE_PATH_LENGTH);
