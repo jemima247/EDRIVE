@@ -145,6 +145,8 @@ char** receive_file(int fd) {
   for(int i = 0; i < 3; i++){
     size_t len;
     printf("%d\n", i);
+    printf("a\n");
+    printf("%d\n", fd);
     if (read(fd, &len, sizeof(size_t)) != sizeof(size_t)) {
       // Reading failed. Return an error
       return NULL;
@@ -167,6 +169,7 @@ char** receive_file(int fd) {
     size_t bytes_read = 0;
     while (bytes_read < len) {
       // Try to read the entire remaining string
+      printf("b\n");
       ssize_t rc = read(fd, result + bytes_read, len - bytes_read);
 
       // Did the read fail? If so, return an error
