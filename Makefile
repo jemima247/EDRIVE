@@ -1,5 +1,5 @@
 CC := clang
-CFLAGS := -g -Wall -Werror -Wno-unused-function -Wno-unused-variable 
+CFLAGS := -g -Wall -Werror -Wno-unused-function -Wno-unused-variable -fsanitize=address
 
 all: server client
 
