@@ -65,7 +65,7 @@ int sending_file(int fd, const char* filePath, const char* username){
    if(write(fd, &fileNameLen, sizeof(size_t)) != sizeof(size_t)){
      return -1;
    }
-
+  printf("Sent length %lu of file\n", fileNameLen);
    //send file name now
    size_t bytes_writtenFN = 0;
    while(bytes_writtenFN < fileNameLen){
@@ -79,7 +79,8 @@ int sending_file(int fd, const char* filePath, const char* username){
         bytes_writtenFN += uc;
 
    }
-
+  
+  printf("sent fileName %s\n", fileName);
 
     
     //send the username length
@@ -87,7 +88,8 @@ int sending_file(int fd, const char* filePath, const char* username){
     if(write(fd, &usernameLen, sizeof(size_t)) != sizeof(size_t)){
         return -1;
     }
-
+  
+  printf("sent username length%lu\n",usernameLen);
     // Send the size the username first
     size_t bytes_writtenU = 0;
     while (bytes_writtenU < usernameLen) {
@@ -101,7 +103,7 @@ int sending_file(int fd, const char* filePath, const char* username){
         bytes_writtenU += uc;
     }
     
-
+  printf("Username %s\n", username);
     // Now send the size of the file and then the file bytes by bytes
     // First, send the byte in a size_t
 
@@ -113,8 +115,9 @@ int sending_file(int fd, const char* filePath, const char* username){
     
     // }
 
-    printf("got here5\n");
+    printf("sent size of file %lu\n", size);
 
+    //now sending the file
     size_t bytes_written = 0;
     while (bytes_written < size) {
       printf("in bytes\n");
@@ -127,6 +130,7 @@ int sending_file(int fd, const char* filePath, const char* username){
         // If there was no error, write returned the number of bytes written
         bytes_written += rc;
     }
+    printf("sent the file\n");
 
     return 0;
 

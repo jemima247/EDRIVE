@@ -213,12 +213,10 @@ void* receive_file_path_thread(void* args){
 
           //get length of the requessted fileName
 <<<<<<< HEAD
-          sleep(3);
-          printf("213\n");
+         
 =======
           
           
->>>>>>> ff0ff4a25daa5c0016b4aae17148c4c0cbe32c8f
           //now create the space for the filePath
           char* filePath = (char*) malloc(sizeof(char)* MAX_FILE_PATH_LENGTH);
           strcpy(filePath, beginingFilePath);
