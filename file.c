@@ -172,6 +172,7 @@ char** receive_file(int fd) {
 
     result[len] = '\0';
     username_and_file[i] = result;
+    printf("%s\n", result);
   }
   printf("178\n");
 
