@@ -211,11 +211,7 @@ void* receive_file_path_thread(void* args){
           char beginingFilePath[] = "./";
           // strcpy(beginingFilePath, "./");
 
-          //get length of the requessted fileName
-<<<<<<< HEAD
-         
-=======
-          
+          //get length of the requessted fileName        
           
           //now create the space for the filePath
           char* filePath = (char*) malloc(sizeof(char)* MAX_FILE_PATH_LENGTH);
