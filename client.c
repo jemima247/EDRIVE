@@ -241,13 +241,13 @@ void *receive_message_thread(void *args)
   int *server_socket = (int *)args;
   while (1)
   {
-    char *usernameServer = messageA[0];
-    char *message = messageA[1];
+    
     printf("%s : %s", usernameServer, message);
     printf("in\n");
     // Read a message from the server
     char **messageA = receive_message(*server_socket);
-
+    char *usernameServer = messageA[0];
+    char *message = messageA[1];
     if (messageA == NULL || messageA[0] == NULL || messageA[1] == NULL)
     {
       //Failed to read message from server, so remove it from the linked list
