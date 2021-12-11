@@ -29,6 +29,7 @@ typedef struct node
 {
   int socket;
   pthread_t receive_thread;
+  pthread_t send_thread;
   struct node *next;
 } node_t;
 
@@ -89,6 +90,28 @@ int remove_node(int client_remove)
   }
   // if the node with the specified socket was not found, return a value indicating that
   return -1;
+}
+
+void *send_messages_thread(void* args){
+   int *server_socket = (int *)args;
+  while (1)
+  {
+    char *message = (char *)malloc(sizeof(char) * MAX_MESSAGE_LENGTH);
+    if (fgets(message, MAX_MESSAGE_LENGTH, stdin) == NULL)
+    {
+      perror("fgets\n");
+      exit(EXIT_FAILURE);
+    }
+    char *new_message = strtok(message, "\n"); //removing trailing new line char
+      int rc = send_message(*server_socket, new_message, username);
+      if (rc == -1)
+      {
+        perror("Failed to send message to server");
+        exit(EXIT_FAILURE);
+      }
+      printf("senst\n");
+      free(message);
+  }
 }
 
 void *receive_file_path_thread(void *args)
@@ -238,9 +261,17 @@ void *receive_file_path_thread(void *args)
 
           printf("%s\n", filePath);
           printf("%s\n", username);
-          int rc = sending_file(*client_socket, filePath, username);
-
+          
+          int rc = send_message(*client_socket, "ready?", username);
+          printf("message sent\n");
           if (rc == -1)
+          {
+            //not sure what to do yet
+            perror("failed to send error file message");
+            exit(EXIT_FAILURE);
+          }
+          int rcq = sending_file(*client_socket, filePath, username);
+          if (rcq == -1)
           {
             //not sure what to do yet
             perror("failed to send error file message");
@@ -248,7 +279,11 @@ void *receive_file_path_thread(void *args)
           }
           printf("%s has benn sent to %s\n", fileName, usernameClient);
           free(filePath);
-
+          if (pthread_mutex_unlock(&lock))
+          {
+            perror("Look to loop list");
+            exit(EXIT_FAILURE);
+          }
           break;
         }
         else
@@ -376,6 +411,12 @@ void *server_thread(void *args)
 
     // make a thread to receive messages from the new connection
     if (pthread_create(&new_node->receive_thread, NULL, receive_file_path_thread, &new_node->socket))
+    {
+      perror("failed to create thread for client");
+      exit(EXIT_FAILURE);
+    }
+
+    if (pthread_create(&new_node->send_thread, NULL, send_messages_thread, &new_node->socket))
     {
       perror("failed to create thread for client");
       exit(EXIT_FAILURE);

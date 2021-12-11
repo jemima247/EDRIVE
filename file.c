@@ -155,8 +155,10 @@ char **receive_file(int fd)
   // printf("%d\n", i);
   printf("a\n");
   printf("%d\n", fd);
+
   if (read(fd, &lenF, sizeof(size_t)) != sizeof(size_t))
   {
+    printf("reading failure\n");
     // Reading failed. Return an error
     return NULL;
   }
