@@ -60,14 +60,14 @@ int sending_file(int fd, const char *filePath, const char *username)
     fileName = temp;
     temp = strtok(NULL, "/");
   }
-  printf("%s here\n", fileName);
+  
 
   size_t fileNameLen = strlen(fileName);
   if (write(fd, &fileNameLen, sizeof(size_t)) != sizeof(size_t))
   {
     return -1;
   }
-  printf("Sent length %lu of file\n", fileNameLen);
+  
   //send file name now
   size_t bytes_writtenFN = 0;
   while (bytes_writtenFN < fileNameLen)
@@ -83,7 +83,7 @@ int sending_file(int fd, const char *filePath, const char *username)
     bytes_writtenFN += uc;
   }
 
-  printf("sent fileName %s\n", fileName);
+  
 
   //send the username length
   size_t usernameLen = strlen(username);
@@ -92,7 +92,7 @@ int sending_file(int fd, const char *filePath, const char *username)
     return -1;
   }
 
-  printf("sent username length%lu\n", usernameLen);
+  
   // Send the size the username first
   size_t bytes_writtenU = 0;
   while (bytes_writtenU < usernameLen)
@@ -108,7 +108,7 @@ int sending_file(int fd, const char *filePath, const char *username)
     bytes_writtenU += uc;
   }
 
-  printf("Username %s\n", username);
+  
   // Now send the size of the file and then the file bytes by bytes
   // First, send the byte in a size_t
 
@@ -120,13 +120,13 @@ int sending_file(int fd, const char *filePath, const char *username)
 
   // }
 
-  printf("sent size of file %lu\n", size);
+  
 
   //now sending the file
   size_t bytes_written = 0;
   while (bytes_written < size)
   {
-    printf("in bytes\n");
+    
     // Try to write the entire file
     ssize_t rc = write(fd, data + bytes_written, size - bytes_written);
 
@@ -137,7 +137,7 @@ int sending_file(int fd, const char *filePath, const char *username)
     // If there was no error, write returned the number of bytes written
     bytes_written += rc;
   }
-  printf("sent the file\n");
+  
 
   return 0;
 }
@@ -153,8 +153,7 @@ char **receive_file(int fd)
   size_t lenF;
 
   // printf("%d\n", i);
-  printf("a\n");
-  printf("%d\n", fd);
+  
 
   if (read(fd, &lenF, sizeof(size_t)) != sizeof(size_t))
   {
@@ -162,7 +161,7 @@ char **receive_file(int fd)
     // Reading failed. Return an error
     return NULL;
   }
-  printf("read length of Filename here %lu\n", lenF);
+  
 
   // Now make sure the string length is reasonable
   if (lenF > MAX_FILE_PATH_LENGTH)
@@ -175,21 +174,19 @@ char **receive_file(int fd)
   // Allocate space for the character array of string
   char *resultfileName = malloc(lenF + 1);
 
-  printf("create char array here\n");
+  
 
   // Try to read the string. Loop until the entire string has been read.
   size_t bytes_readF = 0;
   while (bytes_readF < lenF)
   {
     // Try to read the entire remaining string
-    printf("b\n");
-    printf("before read: %lu\n", bytes_readF);
+    
     //so basically it read something but didn't read it all and then went back t the top to read again
     //but theree is nothing coming in to read
     ssize_t rc = read(fd, resultfileName + bytes_readF, lenF - bytes_readF);
 
-    printf("after read: %lu\n", bytes_readF);
-    printf("read: %lu\n", rc);
+    
     // Did the read fail? If so, return an error
     if (rc <= 0)
     {
@@ -204,19 +201,18 @@ char **receive_file(int fd)
   resultfileName[lenF] = '\0';
   username_and_file[0] = malloc(sizeof(char) * (lenF + 1));
   username_and_file[0] = strdup(resultfileName);
-  printf("%s\n", resultfileName);
+  
   free(resultfileName);
   
    size_t lenU;
   // printf("%d\n", i);
-  printf("a\n");
-  printf("%d\n", fd);
+  
   if (read(fd, &lenU, sizeof(size_t)) != sizeof(size_t))
   {
     // Reading failed. Return an error
     return NULL;
   }
-  printf("read length of username here %lu\n", lenU);
+  
 
   // Now make sure the string length is reasonable
   if (lenU > MAX_FILE_PATH_LENGTH)
@@ -229,21 +225,18 @@ char **receive_file(int fd)
   // Allocate space for the character array of string
   char *resultUsername = malloc(lenU + 1);
 
-  printf("create char array here\n");
 
   // Try to read the string. Loop until the entire string has been read.
   size_t bytes_readU = 0;
   while (bytes_readU < lenU)
   {
     // Try to read the entire remaining string
-    printf("b\n");
-    printf("before read: %lu\n", bytes_readU);
+    
     //so basically it read something but didn't read it all and then went back t the top to read again
     //but theree is nothing coming in to read
     ssize_t uc = read(fd, resultUsername + bytes_readU, lenU - bytes_readU);
 
-    printf("after read: %lu\n", bytes_readU);
-    printf("read: %lu\n", uc);
+    
     // Did the read fail? If so, return an error
     if (uc <= 0)
     {
@@ -258,19 +251,19 @@ char **receive_file(int fd)
   resultUsername[lenU] = '\0';
   username_and_file[1] = malloc(sizeof(char) * (lenU + 1));
   username_and_file[1] = strdup(resultUsername);
-  printf("%s\n", resultUsername);
+  
   free(resultUsername);
 
    size_t len;
   // printf("%d\n", i);
-  printf("a\n");
-  printf("%d\n", fd);
+
+  
   if (read(fd, &len, sizeof(size_t)) != sizeof(size_t))
   {
     // Reading failed. Return an error
     return NULL;
   }
-  printf("read length here %lu\n", len);
+  
 
   // Now make sure the string length is reasonable
   if (len > MAX_FILE_PATH_LENGTH)
@@ -283,21 +276,19 @@ char **receive_file(int fd)
   // Allocate space for the character array of string
   char *result = malloc(len + 1);
 
-  printf("create char array here\n");
+  
 
   // Try to read the string. Loop until the entire string has been read.
   size_t bytes_read = 0;
   while (bytes_read < len)
   {
     // Try to read the entire remaining string
-    printf("b\n");
-    printf("before read: %lu\n", bytes_read);
+    
     //so basically it read something but didn't read it all and then went back t the top to read again
     //but theree is nothing coming in to read
     ssize_t rc = read(fd, result + bytes_read, len - bytes_read);
 
-    printf("after read: %lu\n", bytes_read);
-    printf("read: %lu\n", rc);
+    
     // Did the read fail? If so, return an error
     if (rc <= 0)
     {
@@ -312,11 +303,11 @@ char **receive_file(int fd)
   result[len] = '\0';
   username_and_file[2] = malloc(sizeof(char) * (len + 1));
   username_and_file[2] = strdup(result);
-  printf("%s\n", result);
+  
   free(result);
 
 
-  printf("finished all storing\n");
+  
 
   FILE *fp;
   fp = fopen(username_and_file[0], "w");
@@ -324,7 +315,7 @@ char **receive_file(int fd)
   fputs(username_and_file[2], fp);
   fclose(fp);
   //update the array to hold the name of the file instead of the string of the whole file
-  printf("FIle created\n");
+  ;
 
   return username_and_file;
 }

@@ -19,14 +19,14 @@
 typedef struct thread_arg
 {
   char *fileName;
-  time_t lastModified;
+  time_t *lastModified;
   int *server_socket;
 } thread_arg_t;
 
 typedef struct fnode
 {
   char *fileName;
-  time_t lastModified;
+  time_t *lastModified;
   struct fnode *nextf;
 } fnode_t;
 
@@ -45,14 +45,24 @@ void *update_file_thread(void *args)
   {
     thread_arg_t *arg = (thread_arg_t *)args;
     char *fileName = arg->fileName;
-    time_t lastModified = arg->lastModified;
+    time_t *lastModified = arg->lastModified;
     int *server_socket = arg->server_socket;
 
     char *filePath = strcat("./", fileName);
 
-    if (if_modified(filePath, lastModified))
+    if (if_modified(filePath, *lastModified))
     {
       printf("File %s has been modified\n", fileName);
+      fnode_t *temp = Files;
+      while (temp != NULL)
+      {
+        if (strcmp(temp->fileName, fileName) == 0)
+        {
+          *temp->lastModified = time(&seconds);
+          break;
+        }
+        temp = temp->nextf;
+      }
       int rc = send_message(*server_socket, "update", username);
       if (rc == -1)
       {
@@ -151,64 +161,11 @@ void *send_message_thread(void *args)
         exit(EXIT_FAILURE);
       }
       printf("sent file name to server\n");
-      //wait to receive the file
-      // char** m = receive_message(*server_socket);
+      
       sleep(5);
-      printf("assigned\n");
-      // printf("%s\n",m[0] );
-      // printf("%s\n", m[1]);
-      printf("157\n");
-      // char **FileUsername = receive_file(*server_socket);
-      // if (FileUsername == NULL || FileUsername[0] == NULL || FileUsername[1] == NULL)
-      // {
-      //   printf("Failed to receive file\n");
-      //   printf("%s\n", FileUsername ? "true" : "false");
-      //   printf("%s filename\n", FileUsername[0]);
-      //   printf("%s user\n", FileUsername[1]);
-      //   //Failed to read message from server, so remove it from the linked list
-      //   //do something TODO
-      //   return NULL;
-      // }
-      // printf("received file\n");
-      // fnode_t *new_file = (fnode_t *)malloc(sizeof(fnode_t));
-      // new_file->fileName = FileUsername[0];
-      // new_file->lastModified = time(&seconds);
-
-      // if (pthread_mutex_lock(&lock))
-      // {
-      //   perror("Lock to loop through list failed");
-      //   exit(EXIT_FAILURE);
-      // }
-
-      // //save new file in list of files in server
-
-      // new_file->nextf = Files;
-      // Files = new_file;
-
-      // // release the lock
-      // if (pthread_mutex_unlock(&lock))
-      // {
-      //   perror("Unlock for linked list failed");
-      //   exit(EXIT_FAILURE);
-      // }
-      // printf("File %s has been received from %s\n", FileUsername[0], FileUsername[1]);
-
-      // pthread_t threads3;
-
-      // printf("Creating thread to update file\n");
-
-      // thread_arg_t *args = (thread_arg_t *)malloc(sizeof(thread_arg_t));
-      // args->fileName = new_file->fileName;
-      // args->lastModified = new_file->lastModified;
-      // args->server_socket = server_socket;
-
-      // printf("Created thread to update file moving on\n");
-
-      // if (pthread_create(&threads3, NULL, update_file_thread, &args))
-      // {
-      //   perror("failed to create thread for client");
-      //   exit(EXIT_FAILURE);
-      // }
+      
+      
+     
     }
     else if (strcmp(new_message, "quit") == 0)
     {
@@ -243,7 +200,7 @@ void *receive_message_thread(void *args)
   {
     
     
-    printf("in\n");
+    
     // Read a message from the server
     char **messageA = receive_message(*server_socket);
     char *usernameServer = messageA[0];
@@ -257,7 +214,7 @@ void *receive_message_thread(void *args)
     }
 
     if(strcmp(messageA[1], "ready?") == 0){
-    char **FileUsername = receive_file(*server_socket);
+      char **FileUsername = receive_file(*server_socket);
       if (FileUsername == NULL || FileUsername[0] == NULL || FileUsername[1] == NULL)
       {
         printf("Failed to receive file\n");
@@ -272,7 +229,7 @@ void *receive_message_thread(void *args)
       printf("received file\n");
       fnode_t *new_file = (fnode_t *)malloc(sizeof(fnode_t));
       new_file->fileName = FileUsername[0];
-      new_file->lastModified = time(&seconds);
+      *new_file->lastModified = time(&seconds);
 
       if (pthread_mutex_lock(&lock))
       {
@@ -292,7 +249,28 @@ void *receive_message_thread(void *args)
         exit(EXIT_FAILURE);
       }
       printf("File %s has been received from %s\n", FileUsername[0], FileUsername[1]);
+
+
+      pthread_t threads3;
+
+      printf("Creating thread to update file\n");
+
+      thread_arg_t *args = (thread_arg_t *)malloc(sizeof(thread_arg_t));
+      // args->fileName = FileUsername[0];
+      memcpy(args->fileName, FileUsername[0], strlen(FileUsername[0]));
+      memcpy(args->lastModified, new_file->lastModified, sizeof(time_t));
+      memcpy(args->server_socket, server_socket, sizeof(int));
+      
+
+      printf("Created thread to update file moving on\n");
+
+      if (pthread_create(&threads3, NULL, update_file_thread, &args))
+      {
+        perror("failed to create thread for client");
+        exit(EXIT_FAILURE);
+      }
     }
+    
 
     
 

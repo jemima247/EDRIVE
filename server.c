@@ -145,9 +145,10 @@ void *receive_file_path_thread(void *args)
     char *usernameClient = messageA[0];
     char *message = messageA[1];
 
-    printf("%s : '%s'\n", usernameClient, message);
+    
     if (strcmp(message, "send") == 0)
     {
+      printf("%s : '%s'\n", usernameClient, message);
       printf("Preparing to receive file\n");
       char **FileUsername = receive_file(*client_socket);
       if (FileUsername == NULL || FileUsername[0] == NULL || FileUsername[1] == NULL)
@@ -203,11 +204,12 @@ void *receive_file_path_thread(void *args)
     }
     else if (strcmp(message, "receive") == 0)
     {
-      printf("we got the command\n");
+      printf("%s : '%s'\n", usernameClient, message);
+      
       char **messageFile = receive_message(*client_socket);
       if (messageFile == NULL || messageFile[0] == NULL || messageFile[1] == NULL)
       {
-        printf("weird\n");
+        
         //Failed to read message from server, so remove it from the linked list
         if (pthread_mutex_lock(&lock))
         {
@@ -234,16 +236,14 @@ void *receive_file_path_thread(void *args)
         perror("Look to loop list");
         exit(EXIT_FAILURE);
       }
-      printf("%s\n", usernameClient);
+      
 
       fnode_t *temp = Files;
-      printf("%s\n", fileName);
+      
       // printf("the temp val, %s\n", temp->fileName);//was giving the segfault to fix tomorrow
       while (temp != NULL)
       {
-        printf("in\n");
-        printf("tempL: %s\n", temp->fileName);
-        printf("%s filename\n", fileName);
+        
         if (strcmp(temp->fileName, fileName) == 0)
         {
 
@@ -259,11 +259,10 @@ void *receive_file_path_thread(void *args)
 
           strcat(filePath, fileName);
 
-          printf("%s\n", filePath);
-          printf("%s\n", username);
+          
           
           int rc = send_message(*client_socket, "ready?", username);
-          printf("message sent\n");
+          
           if (rc == -1)
           {
             //not sure what to do yet
@@ -386,7 +385,7 @@ void *server_thread(void *args)
   int server_socket_fd = server_args->server_socket_fd;
   while (1)
   {
-    printf("hi\n");
+    // printf("Running server\n");
     // Wait for a client to connect
     int client_socket_fd = server_socket_accept(server_socket_fd);
     if (client_socket_fd == -1)
