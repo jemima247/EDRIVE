@@ -205,7 +205,7 @@ void *receive_message_thread(void *args)
     char **messageA = receive_message(*server_socket);
     char *usernameServer = messageA[0];
     char *message = messageA[1];
-    printf("%s : %s", usernameServer, message);
+    printf("%s : %s\n", usernameServer, message);
     if (messageA == NULL || messageA[0] == NULL || messageA[1] == NULL)
     {
       //Failed to read message from server, so remove it from the linked list
@@ -215,6 +215,7 @@ void *receive_message_thread(void *args)
 
     if(strcmp(messageA[1], "ready?") == 0){
       char **FileUsername = receive_file(*server_socket);
+      // printf("%s\n", FileUsername[0]); 
       if (FileUsername == NULL || FileUsername[0] == NULL || FileUsername[1] == NULL)
       {
         printf("Failed to receive file\n");
@@ -226,10 +227,18 @@ void *receive_message_thread(void *args)
         return NULL;
       }
 
-      printf("received file\n");
+      // printf("received file\n");
       fnode_t *new_file = (fnode_t *)malloc(sizeof(fnode_t));
-      new_file->fileName = FileUsername[0];
-      *new_file->lastModified = time(&seconds);
+      // new_file->fileName = FileUsername[0];
+      // printf("%s\n", FileUsername[0]);
+      new_file->fileName = (char *)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
+      strcpy(new_file->fileName, FileUsername[0]);
+      // memcpy(new_file->fileName, FileUsername[0], strlen(FileUsername[0])-1);
+      // printf("%s\n", new_file->fileName);
+      time_t t = time(&seconds);
+      new_file->lastModified = malloc(sizeof(time_t));
+      memcpy(new_file->lastModified, &t, sizeof(time_t));
+      // *new_file->lastModified = time(&seconds);
 
       if (pthread_mutex_lock(&lock))
       {
@@ -257,18 +266,21 @@ void *receive_message_thread(void *args)
 
       thread_arg_t *args = (thread_arg_t *)malloc(sizeof(thread_arg_t));
       // args->fileName = FileUsername[0];
+      args->fileName = (char *)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
+      args->lastModified = malloc(sizeof(time_t));
       memcpy(args->fileName, FileUsername[0], strlen(FileUsername[0]));
       memcpy(args->lastModified, new_file->lastModified, sizeof(time_t));
-      memcpy(args->server_socket, server_socket, sizeof(int));
+      args->server_socket = server_socket;
+      
       
 
-      printf("Created thread to update file moving on\n");
+      // printf("Created thread to update file moving on\n");
 
-      if (pthread_create(&threads3, NULL, update_file_thread, &args))
-      {
-        perror("failed to create thread for client");
-        exit(EXIT_FAILURE);
-      }
+      // if (pthread_create(&threads3, NULL, update_file_thread, &args))
+      // {
+      //   perror("failed to create thread for client");
+      //   exit(EXIT_FAILURE);
+      // }
     }
     
 
