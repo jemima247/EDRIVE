@@ -45,8 +45,10 @@ typedef struct fnode
   struct fnode *nextf;
 } fnode_t;
 
+//GLobal variable for File names
 fnode_t *Files = NULL;
 
+//is called to remove a node from the linked list
 int remove_node(int client_remove)
 {
   // first node_t pointer to be used to iterate through the linked list
