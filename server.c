@@ -104,7 +104,6 @@ void *send_messages_thread(void* args){
         perror("Failed to send message to server");
         exit(EXIT_FAILURE);
       }
-      printf("senst\n");
       free(message);
   }
 }
@@ -207,8 +206,6 @@ void *receive_file_path_thread(void *args)
         perror("Unlock for linked list failed");
         exit(EXIT_FAILURE);
       }
-
-      printf("%s has sent file %s\n", usernameClient, fileName);
     }
 
     //client want to receive a file
