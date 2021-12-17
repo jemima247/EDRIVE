@@ -284,13 +284,13 @@ void *receive_message_thread(void *args)
       
       
 
-      // printf("Created thread to update file moving on\n");
+      printf("Created thread to update file moving on\n");
 
-      // if (pthread_create(&threads3, NULL, update_file_thread, &args))
-      // {
-      //   perror("failed to create thread for client");
-      //   exit(EXIT_FAILURE);
-      // }
+      if (pthread_create(&threads3, NULL, update_file_thread, args))
+      {
+        perror("failed to create thread for client");
+        exit(EXIT_FAILURE);
+      }
     }
     
 
