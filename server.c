@@ -333,7 +333,7 @@ void *receive_file_path_thread(void *args)
 
       while (temp != NULL)
       {
-        if (temp->fileName == fileName)
+        if (strcmp(temp->fileName, fileName) == 0)
         {
           //use function to send to client
           temp->state = EDITED;

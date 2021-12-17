@@ -9,9 +9,9 @@
 #include <time.h>
 #include <sys/stat.h>
 
+//sending_file is called each time we want to send a file across the network
 int sending_file(int fd, const char *filePath, const char *username)
 {
-
   // Try to open the file
   FILE *input = fopen(filePath, "r");
   if (input == NULL)
@@ -49,6 +49,7 @@ int sending_file(int fd, const char *filePath, const char *username)
     exit(2);
   }
 
+  //create space for the file path and copy @param: filePath into filePathC
   char *filePathC = (char *)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
   strncpy(filePathC, filePath, MAX_FILE_PATH_LENGTH);
   char *fileName = strtok(filePathC, "/");
@@ -61,7 +62,7 @@ int sending_file(int fd, const char *filePath, const char *username)
     temp = strtok(NULL, "/");
   }
   
-
+  //send the fileName length
   size_t fileNameLen = strlen(fileName);
   if (write(fd, &fileNameLen, sizeof(size_t)) != sizeof(size_t))
   {
@@ -83,8 +84,6 @@ int sending_file(int fd, const char *filePath, const char *username)
     bytes_writtenFN += uc;
   }
 
-  
-
   //send the username length
   size_t usernameLen = strlen(username);
   if (write(fd, &usernameLen, sizeof(size_t)) != sizeof(size_t))
@@ -92,7 +91,6 @@ int sending_file(int fd, const char *filePath, const char *username)
     return -1;
   }
 
-  
   // Send the size the username first
   size_t bytes_writtenU = 0;
   while (bytes_writtenU < usernameLen)
@@ -108,19 +106,13 @@ int sending_file(int fd, const char *filePath, const char *username)
     bytes_writtenU += uc;
   }
 
-  
   // Now send the size of the file and then the file bytes by bytes
   // First, send the byte in a size_t
-
   if (write(fd, &size, sizeof(size_t)) != sizeof(size_t))
   {
     // Writing failed, so return an error
     return -1;
   }
-
-  // }
-
-  
 
   //now sending the file
   size_t bytes_written = 0;
@@ -136,17 +128,15 @@ int sending_file(int fd, const char *filePath, const char *username)
 
     // If there was no error, write returned the number of bytes written
     bytes_written += rc;
-  }
-  
-
+  } 
   return 0;
 }
 
+//receive_file is called each time we want to receive a file across the network
 char **receive_file(int fd)
 {
   // First try to read in the username length
   char **username_and_file = malloc(sizeof(char *) * 3);
-
   // The first iteration of the for loop reads in the username, and the second reads in the file array They are stored to
   //  username_and_file[0] and username_and_file[1], respectively.
   

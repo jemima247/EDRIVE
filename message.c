@@ -66,7 +66,6 @@ int send_message(int fd, const char* message, const char* username) {
 char** receive_message(int fd) {
   // First try to read in the username length
   char** usernamemessage = malloc(sizeof(char*) * 2);
-
   // The first iteration of the for loop reads in the username, and the second reads in the message. They are stored to 
   //  usernameMessage[0] and usernameMessage[1], respectively.
   for(int i = 0; i < 2; i++){
@@ -100,7 +99,7 @@ char** receive_message(int fd) {
       // Update the number of bytes read
       bytes_read += rc;
     }
-
+    
     result[len] = '\0';
     usernamemessage[i] = result;
   }
