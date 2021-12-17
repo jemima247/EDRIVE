@@ -2,6 +2,7 @@
 
 #pragma once
 #define MAX_FILE_PATH_LENGTH 260
+#define MAX_FILE_LENGTH 20000
 
 // Send a across a socket with a header that includes the message length. Returns non-zero value if
 // an error occurs.

@@ -137,47 +137,34 @@ char **receive_file(int fd)
 {
   // First try to read in the username length
   char **username_and_file = malloc(sizeof(char *) * 3);
-  // The first iteration of the for loop reads in the username, and the second reads in the file array They are stored to
-  //  username_and_file[0] and username_and_file[1], respectively.
   
-  size_t lenF;
-
-  // printf("%d\n", i);
+  //read in the file length into lenF
+  size_t lenF; 
   
-
   if (read(fd, &lenF, sizeof(size_t)) != sizeof(size_t))
   {
-    printf("reading failure\n");
-    // Reading failed. Return an error
+    // Reading failed. Return Null
     return NULL;
   }
   
-
   // Now make sure the string length is reasonable
   if (lenF > MAX_FILE_PATH_LENGTH)
   {
     errno = EINVAL;
-
     return NULL;
   }
 
   // Allocate space for the character array of string
   char *resultfileName = malloc(lenF + 1);
 
-  
-
   // Try to read the string. Loop until the entire string has been read.
   size_t bytes_readF = 0;
   while (bytes_readF < lenF)
   {
     // Try to read the entire remaining string
-    
-    //so basically it read something but didn't read it all and then went back t the top to read again
-    //but theree is nothing coming in to read
     ssize_t rc = read(fd, resultfileName + bytes_readF, lenF - bytes_readF);
-
-    
-    // Did the read fail? If so, return an error
+  
+    // Did the read fail? If so, return an NULL and free resultfileName
     if (rc <= 0)
     {
       free(resultfileName);
@@ -187,47 +174,45 @@ char **receive_file(int fd)
     // Update the number of bytes read
     bytes_readF += rc;
   }
-
+  
+  //add the null delimenator
   resultfileName[lenF] = '\0';
+
+  //create space for username and fileName
   username_and_file[0] = malloc(sizeof(char) * (lenF + 1));
+
+  //copy resultfileName into username_and_file[0]
   username_and_file[0] = strdup(resultfileName);
   
+  //free
   free(resultfileName);
   
-   size_t lenU;
-  // printf("%d\n", i);
-  
+  //read in the username length into lenU
+  size_t lenU;
   if (read(fd, &lenU, sizeof(size_t)) != sizeof(size_t))
   {
     // Reading failed. Return an error
     return NULL;
   }
   
-
   // Now make sure the string length is reasonable
   if (lenU > MAX_FILE_PATH_LENGTH)
   {
     errno = EINVAL;
-
     return NULL;
   }
 
   // Allocate space for the character array of string
   char *resultUsername = malloc(lenU + 1);
 
-
   // Try to read the string. Loop until the entire string has been read.
   size_t bytes_readU = 0;
   while (bytes_readU < lenU)
   {
     // Try to read the entire remaining string
-    
-    //so basically it read something but didn't read it all and then went back t the top to read again
-    //but theree is nothing coming in to read
     ssize_t uc = read(fd, resultUsername + bytes_readU, lenU - bytes_readU);
 
-    
-    // Did the read fail? If so, return an error
+    // Did the read fail? If so, return Null and free resultUsername
     if (uc <= 0)
     {
       free(resultUsername);
@@ -238,48 +223,44 @@ char **receive_file(int fd)
     bytes_readU += uc;
   }
 
+  //add null delimenator
   resultUsername[lenU] = '\0';
+
+  //create space for username 
   username_and_file[1] = malloc(sizeof(char) * (lenU + 1));
+  //copy the resultUsername into username_and_file[1]
   username_and_file[1] = strdup(resultUsername);
   
+  //free
   free(resultUsername);
 
-   size_t len;
-  // printf("%d\n", i);
-
-  
+  //read in the length of the file
+  size_t len;
   if (read(fd, &len, sizeof(size_t)) != sizeof(size_t))
   {
-    // Reading failed. Return an error
+    // Reading failed. Return NULL
     return NULL;
   }
   
 
-  // Now make sure the string length is reasonable
-  if (len > MAX_FILE_PATH_LENGTH)
+  // Now make sure the File length is reasonable
+  if (len > MAX_FILE_LENGTH)
   {
     errno = EINVAL;
-
     return NULL;
   }
 
   // Allocate space for the character array of string
   char *result = malloc(len + 1);
 
-  
-
   // Try to read the string. Loop until the entire string has been read.
   size_t bytes_read = 0;
   while (bytes_read < len)
   {
-    // Try to read the entire remaining string
-    
-    //so basically it read something but didn't read it all and then went back t the top to read again
-    //but theree is nothing coming in to read
+    // Try to read the entire remaining file data
     ssize_t rc = read(fd, result + bytes_read, len - bytes_read);
-
     
-    // Did the read fail? If so, return an error
+    // Did the read fail? If so, return Null and free result
     if (rc <= 0)
     {
       free(result);
@@ -290,42 +271,52 @@ char **receive_file(int fd)
     bytes_read += rc;
   }
 
+  //add null deliminator
   result[len] = '\0';
+
+  //create space for the file data
   username_and_file[2] = malloc(sizeof(char) * (len + 1));
+
+  //copy the file data into the array
   username_and_file[2] = strdup(result);
   
+  //free the file data
   free(result);
-
-
   
-
+  //now create the file as writable
   FILE *fp;
   fp = fopen(username_and_file[0], "w");
 
+  //write into the file and close the file
   fputs(username_and_file[2], fp);
   fclose(fp);
-  //update the array to hold the name of the file instead of the string of the whole file
-  ;
-
+  
   return username_and_file;
+
 }
 
-//constructe the if modified function that takes the path of the file in the client since its onle
-//if the client modifies the file it should send it back to the server
+//if_modified checks if the client has modified the file
+//returns 0 - false or 1-true
 int if_modified(char *filePath, time_t last_modified_in_client)
 {
+
+  //create struct to hold the information of the file
   struct stat sb;
+
+  //get the information from the file
   stat(filePath, &sb);
+
+  //get the last time the file was modified
   time_t last_modified = sb.st_mtime;
+
   if (last_modified_in_client == last_modified)
   {
+    //file not modified
     return 0;
   }
   else
   {
+    //file modified
     return 1;
   }
 }
-
-//also I think for the server to update the file it does the samem receive file method it just has to find to already saved files and give
-//it the state of edited.
