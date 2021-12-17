@@ -48,7 +48,17 @@ void *update_file_thread(void *args)
     time_t *lastModified = arg->lastModified;
     int *server_socket = arg->server_socket;
 
-    char *filePath = strcat("./", fileName);
+
+    char beginingFilePath[] = "./";
+    // strcpy(beginingFilePath, "./");
+
+    //get length of the requessted fileName
+
+    //now create the space for the filePath
+    char *filePath = (char *)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
+    strcpy(filePath, beginingFilePath);
+
+    strcat(filePath, fileName);
 
     if (if_modified(filePath, *lastModified))
     {
