@@ -13,5 +13,5 @@ int sending_file(int fd, const char* filePath, const char* username);
 char** receive_file(int fd);
 
 
-
+//check if file was modifiedx
 int if_modified(char* filePath, time_t last_modified_in_client);
