@@ -16,6 +16,7 @@
 #define MAX_MESSAGE_LENGTH 2048
 #define MAX_FILE_PATH_LENGTH 260
 
+//struct to hold the file information for updating
 typedef struct thread_arg
 {
   char *fileName;
@@ -23,6 +24,7 @@ typedef struct thread_arg
   int *server_socket;
 } thread_arg_t;
 
+//the file struct so the client can have a list of the files theyhold
 typedef struct fnode
 {
   char *fileName;
@@ -44,6 +46,7 @@ void *update_file_thread(void *args)
   while (true)
   {
     thread_arg_t *arg = (thread_arg_t *)args;
+    
     char *fileName = arg->fileName;
     time_t *lastModified = arg->lastModified;
     int *server_socket = arg->server_socket;
@@ -57,6 +60,7 @@ void *update_file_thread(void *args)
     //now create the space for the filePath
     char *filePath = (char *)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
     strcpy(filePath, beginingFilePath);
+    
 
     strcat(filePath, fileName);
 
@@ -85,11 +89,13 @@ void *update_file_thread(void *args)
         perror("Failed to send message to server");
         exit(EXIT_FAILURE);
       }
-
-      free(filePath);
-      free(fileName);
-      free(arg);
+      time_t t = time(&seconds);
+      // arg->lastModified = &t;
+      memcpy(arg->lastModified, &t, sizeof(time_t));
     }
+    free(filePath);
+    
+    
   }
 }
 
@@ -278,7 +284,8 @@ void *receive_message_thread(void *args)
       // args->fileName = FileUsername[0];
       args->fileName = (char *)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
       args->lastModified = malloc(sizeof(time_t));
-      memcpy(args->fileName, FileUsername[0], strlen(FileUsername[0]));
+      strcpy(args->fileName, FileUsername[0]);
+      // memcpy(args->fileName, FileUsername[0], strlen(FileUsername[0]));
       memcpy(args->lastModified, new_file->lastModified, sizeof(time_t));
       args->server_socket = server_socket;
       
