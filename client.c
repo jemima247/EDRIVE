@@ -233,7 +233,7 @@ void *send_message_thread(void *args)
         free(temp);
       }
       //close the socket connection
-      close(*server_socket);
+      // close(*server_socket);
       exit(EXIT_SUCCESS);
       //exit the program
     }
