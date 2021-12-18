@@ -11,6 +11,7 @@ Some basic commands for the clients are
 ```
 send (used to send a file to the server)
 receive (used to request a file from the server)
+quit (used when client wants to disconnect from server)
 ```
 
 # HOW TO RUN EDRIVE?
@@ -33,6 +34,10 @@ receive
 You'll be prompted for a file name
 ```
 5. If you edit a file the file will autometically be updated in the server as long as the client is still connected
+6. To disconnect client from server
+```
+quit
+```
 
 # LINK TO PROJECT PRESENTATION:
 https://grinco-my.sharepoint.com/:p:/g/personal/alabijem_grinnell_edu/EX47CKZajTRCnrUNZ4YZVt4BWm75bRqaG2befrjWS0bdmQ?e=eed0L6
