@@ -87,8 +87,9 @@ int remove_node(int client_remove)
   return -1;
 }
 
-void *send_messages_thread(void* args){
-   int *server_socket = (int *)args;
+void *send_messages_thread(void *args)
+{
+  int *server_socket = (int *)args;
   while (1)
   {
     char *message = (char *)malloc(sizeof(char) * MAX_MESSAGE_LENGTH);
@@ -98,13 +99,13 @@ void *send_messages_thread(void* args){
       exit(EXIT_FAILURE);
     }
     char *new_message = strtok(message, "\n"); //removing trailing new line char
-      int rc = send_message(*server_socket, new_message, username);
-      if (rc == -1)
-      {
-        perror("Failed to send message to server");
-        exit(EXIT_FAILURE);
-      }
-      free(message);
+    int rc = send_message(*server_socket, new_message, username);
+    if (rc == -1)
+    {
+      perror("Failed to send message to server");
+      exit(EXIT_FAILURE);
+    }
+    free(message);
   }
 }
 
@@ -120,7 +121,7 @@ void *receive_file_path_thread(void *args)
     //check if we received message from the server
     if (messageA == NULL || messageA[0] == NULL || messageA[1] == NULL)
     {
-      
+
       //lock linked list
       if (pthread_mutex_lock(&lock))
       {
@@ -144,7 +145,7 @@ void *receive_file_path_thread(void *args)
     // Otherwise there is a message in messageA
     char *usernameClient = messageA[0];
     char *message = messageA[1];
-    
+
     //clients wants to send something
     if (strcmp(message, "send") == 0)
     {
@@ -212,18 +213,18 @@ void *receive_file_path_thread(void *args)
     else if (strcmp(message, "receive") == 0)
     {
       printf("%s : '%s'\n", usernameClient, message);
-      
+
       char **messageFile = receive_message(*client_socket);
       if (messageFile == NULL || messageFile[0] == NULL || messageFile[1] == NULL)
       {
-        
-       //lock the linked list first
+
+        //lock the linked list first
         if (pthread_mutex_lock(&lock))
         {
           perror("Lock to loop through list failed");
           exit(EXIT_FAILURE);
         }
-         //Failed to read message from server, so remove it from the linked list
+        //Failed to read message from server, so remove it from the linked list
         remove_node(*client_socket); //-- Why are we removing the node oooh never mind
 
         //unlock the linked list
@@ -239,23 +240,23 @@ void *receive_file_path_thread(void *args)
       usernameClient = messageFile[0];
       const char *fileName = messageFile[1];
 
-      //lock the linked list 
+      //lock the linked list
       if (pthread_mutex_lock(&lock))
       {
         perror("Look to loop list");
         exit(EXIT_FAILURE);
       }
-      
+
       //loop through list of files to confirm that file exist then send it by creating a temp node
       fnode_t *temp = Files;
-      
+
       while (temp != NULL)
       {
 
-        //check if fileName is existing in the list 
+        //check if fileName is existing in the list
         if (strcmp(temp->fileName, fileName) == 0)
         {
-          
+
           char beginingFilePath[] = "./";
           //now create the space for the filePath
           char *filePath = (char *)malloc(sizeof(char) * MAX_FILE_PATH_LENGTH);
@@ -265,10 +266,10 @@ void *receive_file_path_thread(void *args)
 
           //concatenate filePath and fileName
           strcat(filePath, fileName);
-          
+
           //tell the client we are ready
           int rc = send_message(*client_socket, "ready?", username);
-          
+
           if (rc == -1)
           {
             perror("failed to send message");
@@ -325,7 +326,7 @@ void *receive_file_path_thread(void *args)
       char **FileUsername = receive_file(*client_socket);
       if (FileUsername == NULL || FileUsername[0] == NULL || FileUsername[1] == NULL)
       {
-        
+
         //lock the linked list
         if (pthread_mutex_lock(&lock))
         {
@@ -393,6 +394,26 @@ void *receive_file_path_thread(void *args)
       //free malloced spaces
       free(FileUsername);
       free(fileName);
+    }
+    else if (strcmp(message, "quit") == 0)
+    {
+      //lock the linked list
+      int rc = send_message(*client_socket, "Bye bye", username);
+      if (pthread_mutex_lock(&lock))
+      {
+        perror("Lock to loop through list failed");
+        exit(EXIT_FAILURE);
+      }
+
+      //Failed to read message from server, so remove it from the linked list
+      remove_node(*client_socket);
+
+      //unlock the linked list
+      if (pthread_mutex_unlock(&lock))
+      {
+        perror("Unlock to loop through list failed");
+        exit(EXIT_FAILURE);
+      }
     }
     else
     {
@@ -467,7 +488,7 @@ void *server_thread(void *args)
 
 int main(int argc, char **argv)
 {
-  
+
   // ignore SIGPIPE because that's what happens with bad reads sometimes instead of errors
   signal(SIGPIPE, SIG_IGN);
 
