@@ -395,26 +395,26 @@ void *receive_file_path_thread(void *args)
       free(FileUsername);
       free(fileName);
     }
-    else if (strcmp(message, "quit") == 0)
-    {
-      //lock the linked list
-      int rc = send_message(*client_socket, "Bye bye", username);
-      if (pthread_mutex_lock(&lock))
-      {
-        perror("Lock to loop through list failed");
-        exit(EXIT_FAILURE);
-      }
+    // else if (strcmp(message, "quit") == 0)
+    // {
+    //   //lock the linked list
+    //   int rc = send_message(*client_socket, "Bye bye", username);
+    //   if (pthread_mutex_lock(&lock))
+    //   {
+    //     perror("Lock to loop through list failed");
+    //     exit(EXIT_FAILURE);
+    //   }
 
-      //Failed to read message from server, so remove it from the linked list
-      remove_node(*client_socket);
+    //   //Failed to read message from server, so remove it from the linked list
+    //   remove_node(*client_socket);
 
-      //unlock the linked list
-      if (pthread_mutex_unlock(&lock))
-      {
-        perror("Unlock to loop through list failed");
-        exit(EXIT_FAILURE);
-      }
-    }
+    //   //unlock the linked list
+    //   if (pthread_mutex_unlock(&lock))
+    //   {
+    //     perror("Unlock to loop through list failed");
+    //     exit(EXIT_FAILURE);
+    //   }
+    // }
     else
     {
       //non-valid command

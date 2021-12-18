@@ -213,30 +213,30 @@ void *send_message_thread(void *args)
       //receive the file from the server
     }
     //quit connection
-    else if (strcmp(new_message, "quit") == 0)
-    {
-      //send the message to the server
-      int rc = send_message(*server_socket, new_message, username);
-      if (rc == -1)
-      {
-        perror("Failed to send message to server");
-        exit(EXIT_FAILURE);
-      }
-      while (Files != NULL)
-      {
-        //free and clear all files client holds
-        fnode_t *temp = Files;
-        Files = Files->nextf;
+    // else if (strcmp(new_message, "quit") == 0)
+    // {
+    //   //send the message to the server
+    //   int rc = send_message(*server_socket, new_message, username);
+    //   if (rc == -1)
+    //   {
+    //     perror("Failed to send message to server");
+    //     exit(EXIT_FAILURE);
+    //   }
+    //   while (Files != NULL)
+    //   {
+    //     //free and clear all files client holds
+    //     fnode_t *temp = Files;
+    //     Files = Files->nextf;
         
-        int r = remove(temp->fileName);
-        free(temp->fileName);
-        free(temp);
-      }
-      //close the socket connection
-      // close(*server_socket);
-      exit(EXIT_SUCCESS);
-      //exit the program
-    }
+    //     int r = remove(temp->fileName);
+    //     free(temp->fileName);
+    //     free(temp);
+    //   }
+    //   //close the socket connection
+    //   // close(*server_socket);
+    //   exit(EXIT_SUCCESS);
+    //   //exit the program
+    // }
     else
     {
       //sned random message to server that is not a command
