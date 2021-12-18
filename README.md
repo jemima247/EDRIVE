@@ -39,7 +39,4 @@ You'll be prompted for a file name
 quit (work in progress)
 ```
 
-# LINK TO PROJECT PRESENTATION:
-https://grinco-my.sharepoint.com/:p:/g/personal/alabijem_grinnell_edu/EX47CKZajTRCnrUNZ4YZVt4BWm75bRqaG2befrjWS0bdmQ?e=eed0L6
-
 NB: We commented out our code for the quit command
